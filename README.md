@@ -1,4 +1,4 @@
 flask-github-hook
 =================
 
-Simple web service for update a git repository after someone has pushed to it.
+Simple web service that update a git repository after someone has pushed to it.
