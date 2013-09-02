@@ -1,4 +1,4 @@
 import sys
-sys.path.insert(0, '/var/www/flask-test')
+sys.path.insert(0, '/var/www/flask-github-hook')
 
-from flasktest import app as application
+from flask-github-hook import app as application
