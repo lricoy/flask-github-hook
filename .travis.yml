@@ -9,7 +9,7 @@ install:
 
 # command to run tests
 script:
-  - python manage.py test
+  - python github-hook_tests.py
 
 # after success script
 #after_success:
