@@ -26,7 +26,7 @@ def home(repository):
 
     # Check the existence of the repository on the server.
     if not os.path.exists(repo_path):
-        return 'The given repository name ({repo}) does not exists on the server'.format(repo=repository)
+        return 'The given repository name ({repo}) does not exists on the server'.format(repo=repository), 500
 
     app.logger.debug('Affected branch: {0} on repo {1}'.format(branch, repository))
 

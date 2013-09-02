@@ -1,0 +1,21 @@
+language: python
+python:
+  - "2.6"
+  - "2.7"
+
+# command to install dependencies
+install:
+  - "pip install Flask --use-mirrors"
+
+# command to run tests
+script:
+  - python manage.py test
+
+# after success script
+#after_success:
+#  - curl -d "payload=%7B%22ref%22%3A+%22master%22%7D" http://192.241.237.16/github-hook/flask-github-hook
+
+# whitelist
+branches:
+  only:
+    - master
