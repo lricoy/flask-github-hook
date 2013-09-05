@@ -9,7 +9,7 @@ install:
 
 # command to run tests
 script:
-  - python github_hook_tests.py
+  - nosetests
 
 # after success script
 #after_success:
