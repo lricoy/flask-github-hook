@@ -55,7 +55,7 @@ class GitUpdaterTestCase(unittest.TestCase):
         git = self.git
 
         assert git.git_exec_path == '/usr/bin/'
-        assert git.repository_root_path == '/home/lucas/workspace'
+        assert git.repository_root_path == os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         assert git.repository == 'dummy_repo'
         assert git.branch == 'dummy_branch'
 
