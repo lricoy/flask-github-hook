@@ -1,57 +1,99 @@
 import json
 import os
+dirname = os.path.dirname
 import subprocess
 
 from flask import Flask, request
-from settings import *
+from util import *
 
 app = Flask(__name__)
-app.debug = DEBUG
+app.debug = True
 
 @app.route('/<repository>', methods=['POST'])
 def home(repository):
 
-    # Check the existence of the github payload param
-    form_data = request.form.get('payload', '')
-    if not form_data:
+    try:
+        payload = ''
+        remote = request.args.get('remote', 'origin')
+
+        try:
+            form_data = request.form['payload']
+            payload = json.loads(form_data)
+            branch = os.path.basename(payload['ref'])
+
+        except KeyError, e:
+            raise MissingPayloadParam()
+
+        except Exception, e:
+            raise InvalidPayloadParam()
+        
+        git = GitUpdater(repository, branch)
+        git.update()
+
+        return 'OK', 200
+
+    except RepoDoesNotExists, e:
+        return 'The given repository name ({repo}) does not exists on the server'.format(repo=e.repo), 500
+
+    except MissingPayloadParam, e:
         return 'Missing payload data.', 403
 
-    # Get the request data.
-    payload = json.loads(form_data)
-    remote = request.args.get('remote', 'origin')
-    branch = os.path.basename(payload['ref'])
+    except InvalidPayloadParam, e:
+        return 'Invalid Payload parameter received', 400
 
-    # Local repository path.
-    repo_path = os.path.join(REPO_ROOT_PATH, repository)
+    except Exception, e:
+        app.logger.error(e)
+        return 'Something went wrong\n {stack}'.format(stack=e), 500
 
-    # Check the existence of the repository on the server.
-    if not os.path.exists(repo_path):
-        return 'The given repository name ({repo}) does not exists on the server'.format(repo=repository), 500
+class GitUpdater(object):
+    """
+        Simple class to handle the git commands
+    """
 
-    app.logger.debug('Affected branch: {0} on repo {1}'.format(branch, repository))
+    def __init__(self, repo, branch):
+        self.git_exec_path = '/usr/bin/'
+        self.repository_root_path = dirname(dirname(os.path.abspath(__file__)))
+        self.repository = repo
+        self.branch = branch
 
-    # Build the 'git pull' request.
-    exec_command = '{git_exec_path}git pull origin {branch}'.format(git_exec_path=GIT_EXEC_PATH, branch=branch)
-    app.logger.debug(exec_command)
+        app.logger.debug('Affected branch: {0} on repo {1} at {2}'.format(branch, repo, self.repository_root_path))
 
-    # System call.
-    pr = subprocess.Popen(exec_command,
-       cwd = repo_path,
-       shell = True,
-       stdout = subprocess.PIPE,
-       stderr = subprocess.PIPE
-       )
-    (out, error) = pr.communicate()
+    @property
+    def exec_command(self):
+        str_command = '{git_exec_path}git pull origin {branch}'.format(**self.__dict__)
+        app.logger.debug(str_command)
+        return str_command
 
-    app.logger.info("Out : " + str(error))
-    app.logger.info("Out : " + str(out))
+    def update(self):
+        """
+            Find the repository local path and execute a 'git pull'
+        """
+        app.logger.debug(self.__dict__)
+        # Local repository path.
+        repo_path = os.path.join(self.repository_root_path, self.repository)
 
-    # Check the result
-    if not 'Error' in error or 'fatal' in error:
-        return'So long and thanks for all the fish.'
 
-    else:
-        return 'Something went wrong\n {stack}'.format(stack=error), 500
+        # Check the existence of the repository on the server.
+        if not os.path.exists(repo_path):
+            raise RepoDoesNotExists(self.repository)
+
+        # System call.
+        pr = subprocess.Popen(self.exec_command,
+           cwd = repo_path,
+           shell = True,
+           stdout = subprocess.PIPE,
+           stderr = subprocess.PIPE
+           )
+
+        (out, error) = pr.communicate()
+
+        app.logger.info("Out : " + str(error))
+        app.logger.info("Out : " + str(out))
+
+        # Check the result
+        if 'Error' in error or 'fatal' in error:
+            raise GitCommandErrorException(out, error)
+
 
 if __name__ == "__main__":
     app.run()
