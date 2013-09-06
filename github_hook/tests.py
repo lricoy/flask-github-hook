@@ -3,6 +3,8 @@ import json
 import unittest
 
 from nose.tools import assert_raises
+from unipath import Path
+p = Path(os.path.abspath(__file__))
 
 import github_hook
 from util import *
@@ -38,7 +40,7 @@ class GitHubHookRequestTestCase(unittest.TestCase):
 
     def test_successful_request(self):
         resp = self.app.post(
-            os.path.basename(os.path.dirname(__file__)),
+            os.path.basename(p.parent.parent),
             data={'payload' :json.dumps({"ref": "master"})}
         )
         assert resp.data == 'OK'
@@ -55,7 +57,7 @@ class GitUpdaterTestCase(unittest.TestCase):
         git = self.git
 
         assert git.git_exec_path == '/usr/bin/'
-        assert git.repository_root_path == os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        assert git.repository_root_path == p.parent.parent.parent #outside repo
         assert git.repository == 'dummy_repo'
         assert git.branch == 'dummy_branch'
 
@@ -64,7 +66,7 @@ class GitUpdaterTestCase(unittest.TestCase):
 
     def test_nonexistant_branch(self):
         git = github_hook.GitUpdater(
-            os.path.basename(os.path.dirname(__file__))
+            p.parent.parent.name
             , 'dummy_branch'
         )
 
