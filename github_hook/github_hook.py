@@ -8,8 +8,10 @@
 
 import json
 import os
-dirname = os.path.dirname
 import subprocess
+
+from unipath import Path
+p = Path(os.path.abspath(__file__))
 
 from flask import Flask, request
 from util import *
@@ -64,7 +66,7 @@ class GitUpdater(object):
 
     def __init__(self, repo, branch):
         self.git_exec_path = '/usr/bin/'
-        self.repository_root_path = dirname(dirname(os.path.abspath(__file__)))
+        self.repository_root_path = p.parent.parent.parent #outside repo
         self.repository = repo
         self.branch = branch
 
@@ -82,7 +84,7 @@ class GitUpdater(object):
         """
         app.logger.debug(self.__dict__)
         # Local repository path.
-        repo_path = os.path.join(self.repository_root_path, self.repository)
+        repo_path = Path(self.repository_root_path, self.repository)
 
 
         # Check the existence of the repository on the server.
