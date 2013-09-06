@@ -1,3 +1,11 @@
+"""
+    Flask Github Hook
+    ~~~
+
+    Simple module that integrate github post-receive signal with local git-pull update.
+
+"""
+
 import json
 import os
 dirname = os.path.dirname
@@ -10,7 +18,11 @@ app = Flask(__name__)
 app.debug = True
 
 @app.route('/<repository>', methods=['POST'])
-def home(repository):
+def default(repository):
+    """Default method that handle the git post-receive request.
+
+    :param repository: The name of the repository to update.
+    """
 
     try:
         payload = ''

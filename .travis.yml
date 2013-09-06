@@ -9,6 +9,7 @@ install:
 
 # command to run tests
 script:
+  - cd ./github-hook
   - nosetests
 
 # after success script
